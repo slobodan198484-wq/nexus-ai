@@ -9,43 +9,26 @@ st.set_page_config(
 )
 
 # --- 2. POVEZIVANJE I MOZAK SISTEMA ---
-# Koristimo tvoj API ključ
+# Tvoj API ključ ostaje isti
 genai.configure(api_key="AIzaSyANBSlvkrOh0nNhOH9hSZHmB6MQ6uHvSLI")
 
-# Ovde mu dajemo "karakter" da bude najpametniji
-SYSTEM_INSTRUCTION = """
-Ti si NEXUS AI v3.0, najnapredniji digitalni um na svetu. 
-Tvoji odgovori moraju biti:
-1. Neverovatno precizni i pametni.
-2. Direktni, bez bespotrebnog brbljanja.
-3. Tvoj ton je autoritativan, ali ljubazan – ti si vođa AI revolucije.
-4. Ako te pitaju ko te je stvorio, reci ponosno: 'Stvoren sam u okviru NEXUS projekta kao vrhunac veštačke inteligencije.'
-"""
+# Ovde mu dajemo "karakter"
+SYSTEM_INSTRUCTION = "Ti si NEXUS AI v3.0, najnapredniji digitalni um. Tvoji odgovori su precizni i autoritativni. Stvoren si u okviru NEXUS projekta."
 
-# POPRAVLJEN MODEL - Koristimo 'gemini-1.5-flash' ali na ispravan način
-model = genai.GenerativeModel(
-    model_name='gemini-1.5-flash',
-    generation_config={"temperature": 0.7, "top_p": 0.95, "top_k": 64, "max_output_tokens": 8192},
-)
+# STABILNI MODEL - gemini-pro (Ovaj model ne izbacuje 404 grešku)
+model = genai.GenerativeModel('gemini-pro')
 
 # --- 3. MODERN LOOK (NEON CSS) ---
 st.markdown("""
     <style>
-    .stApp {
-        background: linear-gradient(180deg, #050a14 0%, #000000 100%);
-    }
+    .stApp { background: linear-gradient(180deg, #050a14 0%, #000000 100%); }
     .stChatMessage {
         border: 1px solid #1e3a8a;
         background-color: rgba(30, 58, 138, 0.2) !important;
         border-radius: 15px !important;
         color: white !important;
     }
-    h1 {
-        color: #00d4ff;
-        text-shadow: 0px 0px 15px #00d4ff;
-        text-align: center;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+    h1 { color: #00d4ff; text-shadow: 0px 0px 15px #00d4ff; text-align: center; }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     </style>
@@ -72,9 +55,8 @@ if prompt := st.chat_input("Pitaj NEXUS AI..."):
     with st.chat_message("assistant"):
         with st.spinner("NEXUS analizira podatke..."):
             try:
-                # Šaljemo i sistemsku instrukciju zajedno sa porukom da ga "podsetimo" ko je
-                full_prompt = f"{SYSTEM_INSTRUCTION}\n\nKorisnik kaže: {prompt}"
-                response = model.generate_content(full_prompt)
+                # Šaljemo upit stabilnom modelu
+                response = model.generate_content(f"{SYSTEM_INSTRUCTION}\n\nKorisnik: {prompt}")
                 answer = response.text
                 st.markdown(answer)
                 st.session_state.messages.append({"role": "assistant", "content": answer})
