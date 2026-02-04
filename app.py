@@ -4,7 +4,7 @@ import google.generativeai as genai
 # --- 1. KONFIGURACIJA ---
 st.set_page_config(page_title="NEXUS AI v3.0", page_icon="💎")
 
-# --- 2. MOZAK (AUTOMATSKO DETEKTOVANJE) ---
+# --- 2. MOZAK ---
 genai.configure(api_key="AIzaSyC1KEnBcDEfQ5H1n0zGy5jRTMUrVgobJY8")
 
 def get_working_model():
@@ -16,62 +16,64 @@ def get_working_model():
 working_model_name = get_working_model()
 model = genai.GenerativeModel(working_model_name)
 
-# --- 3. DIZAJN (POPRAVLJENA ČITLJIVOST) ---
+# --- 3. DIZAJN (EKSTREMNA VIDLJIVOST) ---
 st.markdown("""
     <style>
     /* Pozadina celog sajta */
-    .stApp { 
-        background: #000000; 
-    }
+    .stApp { background-color: #000000 !important; }
     
-    /* Tekst koji ti kucaš i koji Nexus odgovara */
-    .stMarkdown p {
-        color: #ffffff !important; 
-        font-size: 1.1rem !important;
-        line-height: 1.6 !important;
-    }
+    /* FORCE BELA BOJA ZA SAV TEKST */
+    * { color: #ffffff !important; }
     
-    /* Okviri poruka */
+    /* NASLOV MORA BITI PLAV */
+    h1 { color: #00d4ff !important; text-shadow: 0 0 10px #00d4ff; }
+    
+    /* OKVIRI PORUKA - da se jasno vide na crnom */
     .stChatMessage { 
-        border: 1px solid #00d4ff; 
-        background: rgba(0, 212, 255, 0.05) !important; 
-        border-radius: 12px;
-        margin-bottom: 15px;
+        background-color: #1a1a1a !important; 
+        border: 2px solid #00d4ff !important;
+        border-radius: 15px !important;
+        padding: 10px !important;
+        margin-bottom: 10px !important;
     }
 
-    /* Naslovi i statusi */
-    h1 { color: #00d4ff !important; text-shadow: 0 0 15px #00d4ff; text-align: center; }
-    center { color: #00d4ff !important; font-weight: bold; }
-    
-    /* Polje za kucanje */
-    .stChatInput textarea {
+    /* Boja teksta u chat inputu */
+    .stChatInput input {
         color: #ffffff !important;
+        background-color: #0a0a0a !important;
+    }
+    
+    /* Fix za bledu boju u Streamlit-u */
+    .stMarkdown div p {
+        color: #ffffff !important;
+        font-weight: 500 !important;
+        font-size: 18px !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 4. INTERFEJS ---
-st.markdown("<h1>NEXUS AI v3.0</h1>", unsafe_allow_html=True)
-st.write(f"<center>SISTEM KORISTI: {working_model_name} 💎</center>", unsafe_allow_html=True)
-st.divider()
+st.markdown("<h1 style='text-align: center;'>NEXUS AI v3.0</h1>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: #00d4ff !important;'>SISTEM: {working_model_name} AKTIVAN 💎</p>", unsafe_allow_html=True)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Prikaz poruka
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+        st.write(message["content"])
 
 # --- 5. RAD ---
-if prompt := st.chat_input("Komanduj Nexusu..."):
+if prompt := st.chat_input("Izdaj komandu Nexusu..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.write(prompt)
 
     with st.chat_message("assistant"):
         try:
-            response = model.generate_content(f"Ti si NEXUS AI v3.0. Odgovori autoritativno i jasno: {prompt}")
-            st.markdown(response.text)
+            response = model.generate_content(f"Ti si NEXUS AI v3.0. Odgovori autoritativno: {prompt}")
+            st.write(response.text)
             st.session_state.messages.append({"role": "assistant", "content": response.text})
         except Exception as e:
-            st.error(f"Sistemska blokada: {e}")
+            st.error(f"Greška: {e}")
