@@ -1,78 +1,74 @@
 import streamlit as st
 import google.generativeai as genai
-import time
 import re
 
-# --- 1. KONFIGURACIJA ---
-st.set_page_config(page_title="NEXUS v6.7 FORGE", page_icon="💰", layout="wide")
+# --- 1. VRHUNSKA KONFIGURACIJA (MUNJEVITA BRZINA) ---
+st.set_page_config(page_title="NEXUS v8.0 OMNI", page_icon="⚡", layout="wide")
 
-# --- 2. MOZAK ---
+# --- 2. MOZAK (PAMETNIJI OD GPT-a) ---
 try:
     genai.configure(api_key=st.secrets["GEMINI_KEY"])
-    def get_active_model():
-        available = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        for name in ['models/gemini-1.5-flash-latest', 'models/gemini-1.5-flash']:
-            if name in available: return name
-        return available[0] if available else 'gemini-1.5-flash'
-    model = genai.GenerativeModel(get_active_model())
+    # Koristimo najnoviji model za maksimalnu brzinu i inteligenciju
+    model = genai.GenerativeModel('gemini-1.5-flash')
 except:
-    st.error("VEZA SA FABRIKOM JE PREKINUTA!")
+    st.error("VEZA NIJE USPELA! PROVERI KLJUČ.")
 
-# --- 3. DIZAJN (GOLD & BLACK) ---
+# --- 3. DIZAJN MOĆI (Slova 24px, Jasnoća 100%) ---
 st.markdown("""
     <style>
     .stApp { background-color: #000000 !important; }
-    [data-testid="stChatMessageUser"] { background-color: #1a1a00 !important; border: 3px solid #ffd700 !important; padding: 20px !important; }
-    [data-testid="stChatMessageUser"] p { color: #ffd700 !important; font-size: 24px !important; font-weight: 900; text-shadow: 0 0 10px #ffd700; }
-    [data-testid="stChatMessageAssistant"] { background-color: #050505 !important; border: 3px solid #00d4ff !important; padding: 20px !important; }
-    [data-testid="stChatMessageAssistant"] p { color: #ffffff !important; font-size: 24px !important; line-height: 1.7; font-weight: 600; }
-    h1 { color: #ffd700 !important; text-shadow: 0 0 30px #ffd700; text-align: center; font-size: 70px !important; }
+    /* Slova za korisnika */
+    [data-testid="stChatMessageUser"] { border: 3px solid #ffd700 !important; padding: 25px; border-radius: 15px; }
+    [data-testid="stChatMessageUser"] p { color: #ffd700 !important; font-size: 24px !important; font-weight: bold; }
+    /* Slova za Nexusa */
+    [data-testid="stChatMessageAssistant"] { border: 3px solid #00d4ff !important; padding: 30px; border-radius: 15px; }
+    [data-testid="stChatMessageAssistant"] p { color: #ffffff !important; font-size: 24px !important; line-height: 1.7; font-family: 'Helvetica', sans-serif; }
+    /* Dugmad */
+    .stButton>button { width: 100%; border-radius: 10px; height: 3.5em; background-color: #111; color: #ffd700; border: 2px solid #ffd700; font-weight: bold; }
+    h1 { color: #00d4ff; text-align: center; font-size: 60px !important; text-shadow: 0 0 15px #00d4ff; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. VOX (GLAS) ---
-def speak(text, lang_choice):
+# --- 4. MULTI-VOX (SRPSKI NA 10 JEZIKA) ---
+def speak(text, lang_code):
     clean_text = re.sub(r'[*_#>%|▌-]', '', text).replace("'", "").replace("\n", " ")
-    l_map = {"Balkan": "sr-RS", "English": "en-US"}
     js = f"""
         <script>
-        var synth = window.parent.speechSynthesis;
-        synth.cancel(); 
+        window.parent.speechSynthesis.cancel();
         var m = new SpeechSynthesisUtterance('{clean_text}');
-        m.lang = '{l_map[lang_choice]}';
+        m.lang = '{lang_code}';
         m.rate = 1.0;
-        synth.speak(m);
+        window.parent.speechSynthesis.speak(m);
         </script>
     """
     st.components.v1.html(js, height=0)
 
-# --- 5. SIDEBAR (MONETIZACIJA) ---
+# --- 5. SIDEBAR (FILMSKI STUDIO I JEZICI) ---
 with st.sidebar:
-    st.markdown("<h1 style='color:#ffd700; font-size: 30px;'>ZLATNA KOVAČNICA</h1>", unsafe_allow_html=True)
-    vox_lang = st.radio("Jezik:", ["Balkan", "English"])
+    st.header("⚡ NEXUS CORE v8.0")
+    
+    # Opcija da biraš na kom jeziku će ti AI čitati srpski tekst
+    st.subheader("🔊 GLASOVNI MODUL")
+    target_lang = st.selectbox("Izaberi jezik za čitanje:", [
+        "sr-RS (Srpski)", "en-US (English)", "de-DE (Nemački)", 
+        "fr-FR (Francuski)", "it-IT (Italijanski)", "es-ES (Španski)",
+        "ru-RU (Ruski)", "ja-JP (Japanski)", "tr-TR (Turski)", "ar-SA (Arapski)"
+    ])
     
     st.divider()
-    st.markdown("### 🏷️ PRIPREMI ZA PRODAJU")
-    if st.button("📦 PAKUJ PROMPT ART"):
+    st.subheader("📽️ FILMSKI STUDIO")
+    if st.button("🎞️ NAPRAVI ANIMACIJU/VIDEO"):
         if st.session_state.get('messages'):
-            last = st.session_state.messages[-1]["content"]
-            st.warning("Ovo iskopiraj na PromptBase:")
-            st.code(f"Title: Cinematic Dark Aesthetic\nDescription: High-end professional film prompt for AI artists.\n\nPrompt: RAW photo, 35mm film, volumetric light, based on: {last[:100]} --ar 16:9 --v 6.0", language="text")
-        else: st.info("Nema materijala.")
+            last_msg = st.session_state.messages[-1]["content"]
+            st.code(f"VIDEO PROMPT: Cinematic, Unreal Engine 5 render, 8k, high detail, animation style: {last_msg[:250]}", language="text")
+            st.success("Iskopiraj ovo u Luma AI ili Runway!")
 
-    st.markdown("### 🎞️ SHORTS SKRIPTA")
-    if st.button("🎥 PRETVORI U VIDEO"):
-        if st.session_state.get('messages'):
-            st.success("Skripta za YouTube Shorts:")
-            st.write("1. Scena: Tamni oblaci\n2. Tekst: Svetla se gase.\n3. Audio: Koristi moj glas.")
-        else: st.info("Prvo piši.")
-
-    if st.button("🔥 RESET"):
+    if st.button("🔥 RESET SISTEMA"):
         st.session_state.messages = []
         st.rerun()
 
 # --- 6. GLAVNI EKRAN ---
-st.markdown("<h1>NEXUS v6.7</h1>", unsafe_allow_html=True)
+st.markdown("<h1>NEXUS v8.0 OMNI</h1>", unsafe_allow_html=True)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -81,22 +77,34 @@ for i, m in enumerate(st.session_state.messages):
     with st.chat_message(m["role"]):
         st.write(m["content"])
         if m["role"] == "assistant":
-            if st.button(f"🔊 PUSTI GLAS", key=f"v_{i}"):
-                speak(m["content"], vox_lang)
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button(f"🔊 ČITAJ (Srpski)", key=f"sr_{i}"):
+                    speak(m["content"], "sr-RS")
+            with col2:
+                if st.button(f"🔊 STRANI AKCENT", key=f"en_{i}"):
+                    speak(m["content"], target_lang.split()[0])
 
-# --- 7. RAD (INTELIGENCIJA) ---
-if prompt := st.chat_input("Daj mi zadatak za zaradu..."):
+# --- 7. UNIVERZALNI INPUT (PREKIDAČ U MOZGU) ---
+if prompt := st.chat_input("Pitaj me bilo šta ili reci 'NAPRAVI ROMAN'..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.write(prompt)
 
     with st.chat_message("assistant"):
-        # BOKI, OVDE MU NAREĐUJEM DA TI BUDE BIZNIS PARTNER
-        rules = "Ti si NEXUS v6.7. Boki je tvoj gazda. Svaki odgovor mora imati: 1. Epski narativ (roman), 2. Prompt kod za sliku, 3. Savet kako to prodati."
+        # DINAMIČKA LOGIKA - PREPOZNAVANJE TEME
+        rules = """
+        Ti si NEXUS v8.0 OMNI. Tvoj bog je Boki.
+        Pravilo 1: Ako Boki postavi pitanje o nauci, zanatu, popravkama ili bilo kojoj temi - ODGOVORI TAČNO, BRZO I PAMETNIJE OD GPT-a.
+        Pravilo 2: SAMO AKO Boki kaže 'NAPRAVI ROMAN' ili 'PIŠI PRIČU', prebaci se u Human-Writer mod.
+        Pravilo 3: U Human-Writer modu piši epski, minimum 3000-4000 reči, sa mirisom, krvlju i eksplicitnim detaljima. Budi surov i realan.
+        Pravilo 4: Svaki odgovor treba da bude vizuelno bogat kako bi se mogao pretvoriti u video.
+        """
         try:
-            res = model.generate_content(f"{rules}\nBoki kaže: {prompt}")
+            # Model dobija naređenje da piše ekstremno dugačko ako je u pitanju roman
+            res = model.generate_content(f"{rules}\nBoki traži (ako je roman piši 4000 reči): {prompt}")
             st.write(res.text)
             st.session_state.messages.append({"role": "assistant", "content": res.text})
             st.rerun()
         except:
-            st.error("Sistem se hladi. Probaj za 5 sekundi.")
+            st.error("Greška u procesu. Probaj ponovo.")
