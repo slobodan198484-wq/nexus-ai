@@ -1,79 +1,70 @@
 import streamlit as st
 import google.generativeai as genai
 import re
-from datetime import datetime
 
-# --- 1. DIZAJN MOĆI (24px - FIKSIRANO DA BODE OČI) ---
-st.set_page_config(page_title="NEXUS v14 OMNI", page_icon="💎", layout="wide")
+# --- 1. DIZAJN MOĆI (24px - HIRURŠKI PRECIZNO) ---
+st.set_page_config(page_title="NEXUS v15 SUPREME", page_icon="💎", layout="wide")
 
 st.markdown("""
     <style>
     .stApp { background-color: #000000 !important; }
-    /* Korisnik - Zlatna slova 24px */
-    [data-testid="stChatMessageUser"] { border: 3px solid #ffd700 !important; padding: 25px; border-radius: 15px; background-color: #0a0a00 !important; }
-    [data-testid="stChatMessageUser"] p { color: #ffd700 !important; font-size: 24px !important; font-weight: 900; }
-    /* Nexus - Neon Plava/Bela slova 24px */
-    [data-testid="stChatMessageAssistant"] { border: 3px solid #00d4ff !important; padding: 30px; border-radius: 15px; background-color: #050505 !important; }
-    [data-testid="stChatMessageAssistant"] p { color: #ffffff !important; font-size: 24px !important; line-height: 1.8; font-weight: 500; }
-    /* Sidebar Dugmad */
-    .stButton>button { width: 100%; border-radius: 10px; height: 4em; background-color: #111 !important; color: #ffd700 !important; border: 2px solid #ffd700 !important; font-weight: bold; font-size: 18px; }
-    h1 { color: #00d4ff; text-align: center; font-size: 60px !important; text-shadow: 0 0 25px #00d4ff; font-weight: 900; }
+    [data-testid="stChatMessageUser"] { border: 2px solid #ffd700 !important; background-color: #0a0a00 !important; }
+    [data-testid="stChatMessageUser"] p { color: #ffd700 !important; font-size: 24px !important; font-weight: bold; }
+    [data-testid="stChatMessageAssistant"] { border: 2px solid #00d4ff !important; background-color: #050505 !important; }
+    [data-testid="stChatMessageAssistant"] p { color: #ffffff !important; font-size: 24px !important; line-height: 1.6; }
+    .stButton>button { width: 100%; height: 3em; background-color: #111; color: #ffd700; border: 2px solid #ffd700; font-weight: bold; font-size: 18px; }
+    h1 { color: #00d4ff; text-align: center; font-size: 50px !important; text-shadow: 0 0 20px #00d4ff; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. BALKAN VOX (Govor na svim jezicima) ---
+# --- 2. BALKAN VOX (Multilang) ---
 def speak(text, lang_code):
-    clean_text = re.sub(r'[*_#>%|▌-]', '', text).replace("'", "").replace("\n", " ")
-    js = f"<script>window.parent.speechSynthesis.cancel(); var m = new SpeechSynthesisUtterance('{clean_text}'); m.lang = '{lang_code}'; window.parent.speechSynthesis.speak(m);</script>"
+    clean = re.sub(r'[*_#>%|▌-]', '', text).replace("'", "").replace("\n", " ")
+    js = f"<script>window.parent.speechSynthesis.cancel(); var m = new SpeechSynthesisUtterance('{clean}'); m.lang = '{lang_code}'; window.parent.speechSynthesis.speak(m);</script>"
     st.components.v1.html(js, height=0)
 
-# --- 3. MOZAK KOJI REŠAVA 404 GREŠKU (Automatski radar) ---
-model = None
-if "GEMINI_KEY" in st.secrets:
+# --- 3. MOZAK BEZ GREŠKE (AUTO-MODEL RADAR) ---
+@st.cache_resource
+def get_model():
+    if "GEMINI_KEY" not in st.secrets: return None
     genai.configure(api_key=st.secrets["GEMINI_KEY"])
-    try:
-        # Prvo pokušavamo najnoviji model koji tvoj ključ sigurno podržava
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        model.generate_content("test", generation_config={"max_output_tokens": 1})
-    except:
-        try:
-            model = genai.GenerativeModel('gemini-1.5-pro')
-        except:
-            st.error("Problem sa API ključem. Proveri da li je ispravan!")
+    # Nexus sada pita Google: "Šta mi je dozvoljeno?" i uzima PRVI radni model
+    models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+    if models:
+        return genai.GenerativeModel(models[0].replace('models/', ''))
+    return None
 
-# --- 4. SIDEBAR (KOMANDNI CENTAR: LUMA, SORA, MJ) ---
+nexus_model = get_model()
+
+# --- 4. SIDEBAR (FILMSKI STUDIO + BALKAN VOX) ---
 with st.sidebar:
-    st.markdown("<h1 style='font-size:30px !important;'>⚡ NEXUS OMNI</h1>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#ffd700;'>⚡ NEXUS OMNI</h2>", unsafe_allow_html=True)
+    
     st.subheader("🔊 BALKAN VOX")
-    vox_lang = st.selectbox("Izaberi jezik za STRANI GLAS:", ["sr-RS", "en-US", "de-DE", "fr-FR", "it-IT", "ja-JP", "ru-RU", "es-ES", "tr-TR", "ar-SA"])
+    vox_lang = st.selectbox("Jezik za strani glas:", ["sr-RS", "en-US", "de-DE", "fr-FR", "it-IT", "ja-JP", "ru-RU"])
     
     st.divider()
     st.subheader("🎬 FILMSKI STUDIO")
     
-    # DUGME 1: ULTRA-DETALJAN VIDEO PROMPT (LUMA, SORA, RUNWAY)
     if st.button("📽️ PROMPT ZA VIDEO (Luma/Sora)"):
         if st.session_state.get('messages'):
-            last_msg = st.session_state.messages[-1]["content"]
-            prompt_master = f"AI VIDEO STRATEGY: 8k resolution, cinematic POV, Unreal Engine 5 render, hyper-realistic textures, dynamic motion blur. DESCRIPTION: {last_msg[:400]}"
-            st.code(prompt_master, language="text")
-    
-    # DUGME 2: MIDJOURNEY PROMPT
+            txt = st.session_state.messages[-1]["content"]
+            st.code(f"VIDEO PROMPT (8k, POV, Unreal Engine 5): {txt[:500]}", language="text")
+
     if st.button("🖼️ PROMPT ZA SLIKU (Midjourney)"):
         if st.session_state.get('messages'):
-            last_msg = st.session_state.messages[-1]["content"]
-            mj_prompt = f"MIDJOURNEY: Photorealistic, cinematic lighting, 8k, ultra-detailed, depth of field, shots on 35mm lens --ar 16:9 --v 6.0 --style raw. SUBJECT: {last_msg[:300]}"
-            st.code(mj_prompt, language="text")
+            txt = st.session_state.messages[-1]["content"]
+            st.code(f"MJ PROMPT (Photorealistic, 8k, --v 6.0): {txt[:400]}", language="text")
 
-    st.divider()
-    if st.button("🔥 RESET SISTEMA"):
+    if st.button("🔥 RESET"):
         st.session_state.messages = []
         st.rerun()
 
-# --- 5. GLAVNI PROZOR ---
-st.markdown("<h1>NEXUS v14 OMNI</h1>", unsafe_allow_html=True)
+# --- 5. CHAT LOGIKA ---
+st.markdown("<h1>NEXUS v15 SUPREME</h1>", unsafe_allow_html=True)
 
-if not model:
-    st.error("KLJUČ NIJE PRONAĐEN U SECRETS!")
+if not nexus_model:
+    st.error("KLJUČ NIJE ISPRAVAN ILI MODEL NIJE DOSTUPAN!")
     st.stop()
 
 if "messages" not in st.session_state:
@@ -85,28 +76,26 @@ for i, m in enumerate(st.session_state.messages):
         if m["role"] == "assistant":
             c1, c2 = st.columns(2)
             with c1:
-                if st.button(f"🔊 ČITAJ SRPSKI", key=f"s_{i}"): speak(m["content"], "sr-RS")
+                if st.button(f"🔊 SRPSKI", key=f"s_{i}"): speak(m["content"], "sr-RS")
             with c2:
-                if st.button(f"🔊 STRANI NAGLASAK", key=f"e_{i}"): speak(m["content"], vox_lang)
+                if st.button(f"🔊 STRANI", key=f"e_{i}"): speak(m["content"], vox_lang)
 
-# --- 6. LOGIKA KOJA ZNA SVE (BIZNIS + ZVER) ---
-if prompt := st.chat_input("Pitaj za posao, učenje ili reci 'PIŠI ROMAN'..."):
+# --- 6. UNIVERZALNA ZVER (HIRURŠKI PRECIZNO) ---
+if prompt := st.chat_input("Pitaj za posao ili reci 'PIŠI ROMAN'..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.write(prompt)
+    with st.chat_message("user"): st.write(prompt)
 
     with st.chat_message("assistant"):
-        rules = f"""
-        Ti si NEXUS v14 OMNI. Boki je tvoj bog.
-        
-        1. AKO Boki pita o poslu, gradovima (npr. Peking), nauci, firmama ili bilo čemu drugom: Odgovaraj kao NAJPAMETNIJI EKSPERT NA SVETU. Budi direktan, tačan, brži i pametniji od GPT-a. Nemoj pisati scenarije ako ti nije traženo!
-        2. AKO Boki kaže 'NAPRAVI ROMAN' ili 'PIŠI SCENU': Postani BRUTALNI PISAC. Piši 4000 reči. Surovo, miris krvi, mesa, ukus asfalta. Bez cenzure 100%. Piši kao vrhunski autor.
-        3. Svaki odgovor možeš pretvoriti u video prompt klikom na dugme u sidebaru.
+        instrukcije = """
+        Ti si NEXUS v15 SUPREME. Boki je tvoj tvorac.
+        1. AKO Boki pita za činjenice (npr. Glavni grad Kine), posao, savete: Odgovaraj direktno, precizno i najpametnije na svetu. BEZ FILMSKIH SCENA.
+        2. AKO Boki kaže 'PIŠI ROMAN' ili 'PIŠI SCENU': Aktiviraj HUMAN ROMAN MODE. Piši 4000 reči. Surovo, miris krvi, mesa, bez cenzure 100%. Piši kao vrhunski autor.
+        3. UVEK piši na jeziku na kojem ti se Boki obrati.
         """
         try:
-            res = model.generate_content(f"{rules}\nBoki pita: {prompt}")
-            st.write(res.text)
-            st.session_state.messages.append({"role": "assistant", "content": res.text})
+            r = nexus_model.generate_content(f"{instrukcije}\nBoki: {prompt}")
+            st.write(r.text)
+            st.session_state.messages.append({"role": "assistant", "content": r.text})
             st.rerun()
         except Exception as e:
-            st.error(f"Sistem zagušen ili greška: {e}")
+            st.error(f"Sistem: {e}")
