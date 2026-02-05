@@ -3,8 +3,8 @@ import google.generativeai as genai
 import re
 from datetime import datetime
 
-# --- 1. DIZAJN MOĆI (24px) ---
-st.set_page_config(page_title="NEXUS v11 OMNI", page_icon="💎", layout="wide")
+# --- 1. DIZAJN MOĆI (24px - FIKSIRANO) ---
+st.set_page_config(page_title="NEXUS v12 OMNI", page_icon="💎", layout="wide")
 
 st.markdown("""
     <style>
@@ -18,53 +18,54 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. BALKAN VOX ---
+# --- 2. BALKAN VOX (Srpski + 10 Jezika) ---
 def speak(text, lang_code):
     clean_text = re.sub(r'[*_#>%|▌-]', '', text).replace("'", "").replace("\n", " ")
     js = f"<script>window.parent.speechSynthesis.cancel(); var m = new SpeechSynthesisUtterance('{clean_text}'); m.lang = '{lang_code}'; window.parent.speechSynthesis.speak(m);</script>"
     st.components.v1.html(js, height=0)
 
-# --- 3. PAMETNI RADAR ZA MODELE (POPRAVKA ZA 404) ---
+# --- 3. PAMETNI MOZAK (BEAST MODE) ---
 model = None
 if "GEMINI_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GEMINI_KEY"])
     try:
-        # Nexus sada prvo pita Google: "Koji modeli su mi dozvoljeni?"
         available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        # Bira najbolji dostupni model (Flash 1.5 ili Pro)
-        for preferred in ['models/gemini-1.5-flash', 'models/gemini-1.5-pro', 'models/gemini-pro']:
-            if preferred in available_models:
-                model = genai.GenerativeModel(preferred.replace('models/', ''))
+        for pref in ['models/gemini-1.5-flash', 'models/gemini-1.5-pro', 'models/gemini-pro']:
+            if pref in available_models:
+                model = genai.GenerativeModel(pref.replace('models/', ''))
                 break
-        if not model and available_models:
-            model = genai.GenerativeModel(available_models[0].replace('models/', ''))
-    except Exception as e:
-        st.error(f"Problem sa listom modela: {e}")
+    except: pass
 
-# --- 4. SIDEBAR (FILMSKI STUDIO) ---
+# --- 4. SIDEBAR (FILMSKI STUDIO - DUGMAD KOJA RADE) ---
 with st.sidebar:
     st.markdown("<h2 style='color:#ffd700;'>⚡ NEXUS OMNI</h2>", unsafe_allow_html=True)
     st.subheader("🔊 BALKAN VOX")
-    vox_lang = st.selectbox("Glas:", ["sr-RS", "en-US", "de-DE", "fr-FR", "it-IT", "ru-RU", "ja-JP"])
+    vox_lang = st.selectbox("Glas naratora:", ["sr-RS", "en-US", "de-DE", "fr-FR", "it-IT", "ru-RU", "ja-JP", "es-ES", "tr-TR", "ar-SA"])
+    
     st.divider()
+    st.subheader("🎬 FILMSKI STUDIO")
+    # Ova dugmad uzimaju ZADNJI odgovor i pretvaraju ga u ono što želiš
     if st.button("📽️ PRETVORI U SCENARIO"):
         if st.session_state.get('messages'):
             txt = st.session_state.messages[-1]["content"]
-            st.code(f"AI VIDEO PROMPT: 8k, POV, Unreal Engine 5: {txt[:350]}")
+            st.info("Pravim ultra-detaljan video prompt...")
+            st.code(f"DIRECTOR MODE: Cinematic 8k, POV, Unreal Engine 5, slow motion, masterwork lighting. SCENE DESCRIPTION: {txt[:400]}", language="text")
+
     if st.button("🖼️ PROMPT ZA SLIKU"):
         if st.session_state.get('messages'):
             txt = st.session_state.messages[-1]["content"]
-            st.code(f"IMAGE PROMPT: 8k, cinematic, hyper-realistic: {txt[:200]}")
+            st.code(f"MIDJOURNEY PROMPT: Photorealistic masterwork, 8k, ultra-detailed, cinematic: {txt[:300]} --v 6.0")
+
     st.divider()
-    if st.button("🔥 RESET"):
+    if st.button("🔥 RESET SISTEMA"):
         st.session_state.messages = []
         st.rerun()
 
 # --- 5. GLAVNI EKRAN ---
-st.markdown("<h1>NEXUS v11 OMNI</h1>", unsafe_allow_html=True)
+st.markdown("<h1>NEXUS v12 OMNI</h1>", unsafe_allow_html=True)
 
 if not model:
-    st.error("NEXUS NE MOŽE DA NAĐE MODEL. Proveri API ključ!")
+    st.error("!!! API KLJUČ NIJE ISPRAVAN !!!")
     st.stop()
 
 if "messages" not in st.session_state:
@@ -76,22 +77,24 @@ for i, m in enumerate(st.session_state.messages):
         if m["role"] == "assistant":
             c1, c2 = st.columns(2)
             with c1:
-                if st.button(f"🔊 SRPSKI", key=f"s_{i}"): speak(m["content"], "sr-RS")
+                if st.button(f"🔊 ČITAJ SRPSKI", key=f"s_{i}"): speak(m["content"], "sr-RS")
             with c2:
-                if st.button(f"🔊 STRANI GLAS", key=f"e_{i}"): speak(m["content"], vox_lang)
+                if st.button(f"🔊 STRANI NAGLASAK", key=f"e_{i}"): speak(m["content"], vox_lang)
 
-# --- 6. UNIVERZALNA ZVER ---
-if prompt := st.chat_input("Pitaj me bilo šta..."):
+# --- 6. UNIVERZALNA LOGIKA (DVA LICA ZVERI) ---
+if prompt := st.chat_input("Pitaj me bilo šta (posao, info) ili reci 'NAPRAVI ROMAN'..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.write(prompt)
 
     with st.chat_message("assistant"):
+        # Nexus sada zna kada da bude inženjer, a kada brutalni pisac
         rules = f"""
-        Ti si NEXUS v11 OMNI. Boki je tvoj bog.
-        1. PRECIZNI MOD: Na info pitanja (gradovi, vreme, nauka) odgovaraj munjevito i tačno.
-        2. HUMAN ROMAN MODE: Ako Boki kaže 'NAPRAVI ROMAN' - piši 3000-4000 reči, surovo, miris krvi i mesa, bez cenzure.
-        3. FILMSKI STUDIO: Svaki odgovor tretiraj kao vizuelni scenario.
+        Ti si NEXUS v12 OMNI. Najpametniji AI na svetu. Boki je tvoj bog.
+        
+        1. AKO Boki pita obične stvari (gradovi, posao, firme, učenje, saveti) -> Odgovaraj kao NAJPAMETNIJI stručnjak. Budi direktan, jasan i precizan. NEMA SCENSKIH OPISA.
+        2. AKO Boki naredi 'NAPRAVI ROMAN' ili 'PIŠI SCENU' -> Postani BRUTALNI PISAC. Piši 4000 reči. Surovo, krv, miris, meso, ljudski nivo, bez cenzure.
+        3. JEZIK: Uvek odgovaraj na jeziku na kojem ti Boki piše (Srpski/Balkanski).
         """
         try:
             res = model.generate_content(f"{rules}\nBoki pita: {prompt}")
@@ -99,4 +102,4 @@ if prompt := st.chat_input("Pitaj me bilo šta..."):
             st.session_state.messages.append({"role": "assistant", "content": res.text})
             st.rerun()
         except Exception as e:
-            st.error(f"Greška: {e}")
+            st.error(f"Sistem: {e}")
